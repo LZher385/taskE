@@ -2,10 +2,22 @@ import express from 'express';
 import axios from 'axios';
 import cors from 'cors';
 import redis from 'redis';
+import mongoose from 'mongoose';
 
 const app = express();
 app.use(express.urlencoded({ extended: true }));
 app.use(cors());
+
+mongoose.connect("mongodb://localhost:27017/taskE", { useNewUrlParser: true, useUnifiedTopology: true });
+
+const photoSchema = new mongoose.Schema({
+  albumId: Number,
+  title: String,
+  url: String,
+  thumbnailUrl: String
+})
+
+const Photo = mongoose.model('photo', photoSchema);
 
 let redisClient;
 
@@ -22,9 +34,10 @@ app.get('/', async (req, res) => {
   if (cacheResults) {
     return res.json(JSON.parse(cacheResults));
   } else {
-    const { data } = await axios.get(
-        'http://localhost:3001/test'
-    );
+    const data = await Photo.find();
+    // const { data } = await axios.get(
+        // 'http://localhost:3001/test'
+    // );
     redisClient.setEx('test', 30, JSON.stringify(data));
     res.json(data);
   }
